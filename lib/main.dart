@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:route_tracking_app/views/custom_google_map.dart';
 import 'package:route_tracking_app/views/google_map_view.dart';
 
 void main() {
@@ -16,7 +15,7 @@ class RouteTrackerApp extends StatelessWidget {
       home: Scaffold(
         resizeToAvoidBottomInset: false,
         body: SafeArea(
-          child: CustomGoogleMap(),
+          child: GoogleMapView(),
         ),
       ),
     );
