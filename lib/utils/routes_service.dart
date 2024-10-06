@@ -8,7 +8,7 @@ import 'package:route_tracking_app/models/routes_modifiers.dart';
 class RoutesService {
   final String baseUrl =
       'https://routes.googleapis.com/directions/v2:computeRoutes';
-  final String apiKey = 'AIzaSyC87Tt3tfO6aYids0BZStXXbrdAy05jQCI';
+  final String apiKey = 'AIzaSyAoG5tLOTFbpV0Fp9xDpW1i0Nf-ifkxBZw';
   Future<RoutesModel> fetchRoutes(
       {required LocationInfoModel origin,
       required LocationInfoModel destination,

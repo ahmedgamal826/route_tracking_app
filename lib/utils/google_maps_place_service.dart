@@ -5,7 +5,7 @@ import 'package:route_tracking_app/models/place_details_model/place_details_mode
 
 class PlacesService {
   final String baseUrl = 'https://maps.googleapis.com/maps/api/place';
-  final String apiKey = 'AIzaSyB-_vm-uPwc7OFUhabAJR9RwLfkFbX4Uaw';
+  final String apiKey = 'AIzaSyAoG5tLOTFbpV0Fp9xDpW1i0Nf-ifkxBZw';
   Future<List<PlaceModel>> getPredictions(
       {required String input, required String sesstionToken}) async {
     var response = await http.get(Uri.parse(
