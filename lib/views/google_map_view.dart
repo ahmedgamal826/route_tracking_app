@@ -223,5 +223,7 @@ class _GoogleMapViewState extends State<GoogleMapView> {
 
 
 
-// text field ==> search place
-// create route
+// create text field
+// listen to text field
+// search places
+// display results
