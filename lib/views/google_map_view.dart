@@ -148,7 +148,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:route_tracking_app/models/place_autocomplete_model/place_autocomplete_model.dart';
+import 'package:route_tracking_app/utils/google_maps_place_service.dart';
 import 'package:route_tracking_app/utils/location_service.dart';
+import 'package:route_tracking_app/widgets/custom_list_view.dart';
+import 'package:route_tracking_app/widgets/custom_text_field.dart';
 
 class GoogleMapView extends StatefulWidget {
   const GoogleMapView({super.key});
@@ -161,29 +165,74 @@ class _GoogleMapViewState extends State<GoogleMapView> {
   late CameraPosition initialCameraPosition;
   late LocationService locationService;
   late GoogleMapController googleMapController;
+  late TextEditingController textEditingController;
+  late GoogleMapsPlaceService googleMapsPlaceService;
 
   Set<Marker> markers = {};
 
+  List<PlaceModel> places = [];
+
   @override
   void initState() {
+    googleMapsPlaceService = GoogleMapsPlaceService();
+    textEditingController = TextEditingController();
     locationService = LocationService();
     initialCameraPosition = const CameraPosition(
       target: LatLng(0, 0),
     );
 
+    fetchPredictions();
+
     super.initState();
+  }
+
+  void fetchPredictions() {
+    textEditingController.addListener(
+      () async {
+        if (textEditingController.text.isNotEmpty) {
+          var results = await googleMapsPlaceService.getPredictions(
+            input: textEditingController.text,
+          );
+
+          places.clear(); // delete old data
+          places.addAll(results);
+          setState(() {});
+        }
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return GoogleMap(
-        markers: markers,
-        onMapCreated: (controller) {
-          googleMapController = controller; // googleMapController Initialized
-          updateCurrentLocation();
-        },
-        zoomControlsEnabled: true,
-        initialCameraPosition: initialCameraPosition);
+    return Stack(
+      children: [
+        GoogleMap(
+          markers: markers,
+          onMapCreated: (controller) {
+            googleMapController = controller; // googleMapController Initialized
+            updateCurrentLocation();
+          },
+          zoomControlsEnabled: true,
+          initialCameraPosition: initialCameraPosition,
+        ),
+        Positioned(
+          top: 12,
+          right: 12,
+          left: 12,
+          child: Column(
+            children: [
+              CustomTextField(
+                textEditingController: textEditingController,
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              CustomListView(places: places)
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   void updateCurrentLocation() async {

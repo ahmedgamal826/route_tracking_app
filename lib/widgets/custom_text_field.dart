@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
   const CustomTextField({
-    super.key, required this.textEditingController,
+    super.key,
+    required this.textEditingController,
   });
 
   final TextEditingController textEditingController;
@@ -10,9 +11,10 @@ class CustomTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: textEditingController,
-
       decoration: InputDecoration(
-        contentPadding:EdgeInsets.symmetric(horizontal: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+        ),
         hintText: 'Search here',
         fillColor: Colors.white,
         filled: true,
@@ -28,8 +30,6 @@ class CustomTextField extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         borderSide: const BorderSide(
           color: Colors.transparent,
-
-        )
-    );
+        ));
   }
 }

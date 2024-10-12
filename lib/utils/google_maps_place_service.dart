@@ -35,3 +35,36 @@
 //     }
 //   }
 // }
+
+import 'dart:convert';
+
+import 'package:route_tracking_app/models/place_autocomplete_model/place_autocomplete_model.dart';
+import 'package:http/http.dart' as http;
+
+class GoogleMapsPlaceService {
+  final String baseUrl = 'https://maps.googleapis.com/maps/api/place';
+  final String apiKey = 'AIzaSyAoG5tLOTFbpV0Fp9xDpW1i0Nf-ifkxBZw';
+
+  Future<List<PlaceModel>> getPredictions({required String input}) async {
+    var respose = await http.get(
+      Uri.parse(
+        '$baseUrl/autocomplete/json?key=$apiKey&input=$input',
+      ),
+    );
+
+    if (respose.statusCode == 200) {
+      var data = jsonDecode(respose.body); // all data
+      var predicions = data['predictions'];
+
+      List<PlaceModel> places = [];
+
+      for (var item in predicions) {
+        places.add(PlaceModel.fromJson(item));
+      }
+
+      return places;
+    } else {
+      throw Exception();
+    }
+  }
+}
