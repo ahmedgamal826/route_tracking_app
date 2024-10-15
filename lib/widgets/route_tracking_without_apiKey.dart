@@ -3,12 +3,12 @@ import 'package:location/location.dart' as loc;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 
-class GoogleMapsRoute extends StatefulWidget {
+class RouteTrackingWithoutApikey extends StatefulWidget {
   @override
   _GoogleMapsRouteState createState() => _GoogleMapsRouteState();
 }
 
-class _GoogleMapsRouteState extends State<GoogleMapsRoute> {
+class _GoogleMapsRouteState extends State<RouteTrackingWithoutApikey> {
   TextEditingController _destinationController = TextEditingController();
   loc.LocationData? _currentPosition;
   loc.Location location = loc.Location();

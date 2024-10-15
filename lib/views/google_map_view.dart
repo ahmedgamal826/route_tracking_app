@@ -149,10 +149,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:route_tracking_app/models/place_autocomplete_model/place_autocomplete_model.dart';
+import 'package:route_tracking_app/models/place_details_model/place_details_model.dart';
 import 'package:route_tracking_app/utils/google_maps_place_service.dart';
 import 'package:route_tracking_app/utils/location_service.dart';
 import 'package:route_tracking_app/widgets/custom_list_view.dart';
 import 'package:route_tracking_app/widgets/custom_text_field.dart';
+import 'package:uuid/uuid.dart';
 
 class GoogleMapView extends StatefulWidget {
   const GoogleMapView({super.key});
@@ -167,6 +169,7 @@ class _GoogleMapViewState extends State<GoogleMapView> {
   late GoogleMapController googleMapController;
   late TextEditingController textEditingController;
   late GoogleMapsPlaceService googleMapsPlaceService;
+  late Uuid uuid;
 
   Set<Marker> markers = {};
 
@@ -174,6 +177,7 @@ class _GoogleMapViewState extends State<GoogleMapView> {
 
   @override
   void initState() {
+    uuid = Uuid();
     googleMapsPlaceService = GoogleMapsPlaceService();
     textEditingController = TextEditingController();
     locationService = LocationService();
@@ -186,16 +190,26 @@ class _GoogleMapViewState extends State<GoogleMapView> {
     super.initState();
   }
 
+  var sessionToken; // create a random key
+
   void fetchPredictions() {
     textEditingController.addListener(
       () async {
+        sessionToken ??= uuid.v4();
+
+        print(sessionToken);
+
         if (textEditingController.text.isNotEmpty) {
           var results = await googleMapsPlaceService.getPredictions(
             input: textEditingController.text,
+            sessionToken: sessionToken,
           );
 
           places.clear(); // delete old data
           places.addAll(results);
+          setState(() {});
+        } else {
+          places.clear();
           setState(() {});
         }
       },
@@ -227,7 +241,16 @@ class _GoogleMapViewState extends State<GoogleMapView> {
               const SizedBox(
                 height: 20,
               ),
-              CustomListView(places: places)
+              CustomListView(
+                onSelectedPlace: (PlaceDetailsModel) {
+                  textEditingController.clear();
+                  places.clear();
+                  sessionToken = null;
+                  setState(() {});
+                },
+                places: places,
+                googleMapsPlaceService: googleMapsPlaceService,
+              )
             ],
           ),
         ),
