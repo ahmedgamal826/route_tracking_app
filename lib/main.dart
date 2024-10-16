@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:route_tracking_app/views/google_map_view.dart';
-import 'package:route_tracking_app/widgets/route_tracking_without_apiKey.dart';
 
 void main() {
   runApp(const RouteTrackerApp());

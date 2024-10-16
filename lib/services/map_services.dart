@@ -287,6 +287,8 @@ class MapServices {
   PlaceService placeService = PlaceService();
   RoutesService routesService = RoutesService();
 
+  LatLng? currentLocation;
+
   getPredictions({
     required String input,
     required String sessionToken,
@@ -305,26 +307,29 @@ class MapServices {
     }
   }
 
-  Future<LatLng> updateCurrentLocation({
-    required GoogleMapController googleMapController,
-    required Set<Marker> markers,
-  }) async {
-    var locationData = await locationService.getLocation();
-
-    var currentLocation = LatLng(
-      locationData.latitude!,
-      locationData.longitude!,
+  void updateCurrentLocation(
+      {required GoogleMapController googleMapController,
+      required Set<Marker> markers,
+      re}) async {
+    locationService.getRealTimeLocationData(
+      // stream location data
+      (locationData) {
+        currentLocation = LatLng(
+          locationData.latitude!,
+          locationData.longitude!,
+        );
+      },
     );
 
     Marker myLocationMarker = Marker(
       markerId: const MarkerId(
         'my_location',
       ),
-      position: currentLocation,
+      position: currentLocation!,
     );
 
     CameraPosition cameraPosition = CameraPosition(
-      target: currentLocation,
+      target: currentLocation!,
       zoom: 12,
     );
 
@@ -333,8 +338,6 @@ class MapServices {
     );
 
     markers.add(myLocationMarker);
-
-    return currentLocation;
   }
 
   void displayRoute({
@@ -398,15 +401,14 @@ class MapServices {
   }
 
   Future<List<LatLng>> getRouteData({
-    required LatLng currentLocation,
     required LatLng destinationLocation,
   }) async {
     // origin ==> current location
     LocationInfoModel origin = LocationInfoModel(
       location: LocationModel(
         latLng: LatLngModel(
-          latitude: currentLocation.latitude,
-          longitude: currentLocation.longitude,
+          latitude: currentLocation!.latitude,
+          longitude: currentLocation!.longitude,
         ),
       ),
     );

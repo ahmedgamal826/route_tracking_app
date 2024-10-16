@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:route_tracking_app/models/place_autocomplete_model/place_autocomplete_model.dart';
@@ -21,7 +23,7 @@ class _GoogleMapViewState extends State<GoogleMapView> {
   late TextEditingController textEditingController;
   late Uuid uuid;
   Set<Polyline> polyLines = {};
-
+  late Timer timer;
   Set<Marker> markers = {};
 
   List<PlaceModel> places = [];
@@ -47,12 +49,31 @@ class _GoogleMapViewState extends State<GoogleMapView> {
 
   void fetchPredictions() {
     textEditingController.addListener(
-      () async {
-        sessionToken ??= uuid.v4();
+      () {
+        if (timer.isActive ?? false) {
+          timer.cancel();
+        }
+        timer = Timer(const Duration(milliseconds: 100), () async {
+          sessionToken ??= uuid.v4(); // create session token
 
-        print(sessionToken);
+          //if sessionToken != null
+          await mapServices.getPredictions(
+            input: textEditingController.text,
+            places: places,
+            sessionToken: sessionToken,
+          );
+          setState(() {});
+          print(sessionToken);
+        });
       },
     );
+  }
+
+  @override
+  void dispose() {
+    textEditingController.dispose();
+    timer.cancel();
+    super.dispose();
   }
 
   @override
@@ -94,7 +115,6 @@ class _GoogleMapViewState extends State<GoogleMapView> {
                   );
 
                   var points = await mapServices.getRouteData(
-                      currentLocation: currentLocation,
                       destinationLocation: destinationLocation);
                   mapServices.displayRoute(
                     points: points,
@@ -116,7 +136,7 @@ class _GoogleMapViewState extends State<GoogleMapView> {
 
   void updateCurrentLocation() async {
     try {
-      currentLocation = await mapServices.updateCurrentLocation(
+      mapServices.updateCurrentLocation(
         googleMapController: googleMapController,
         markers: markers,
       );
@@ -128,7 +148,6 @@ class _GoogleMapViewState extends State<GoogleMapView> {
     } catch (e) {}
   }
 }
-
 
 // create text field
 // listen to text field
