@@ -42,7 +42,7 @@ import 'package:route_tracking_app/models/place_autocomplete_model/place_autocom
 import 'package:http/http.dart' as http;
 import 'package:route_tracking_app/models/place_details_model/place_details_model.dart';
 
-class GoogleMapsPlaceService {
+class PlaceService {
   final String baseUrl = 'https://maps.googleapis.com/maps/api/place';
   final String apiKey = 'AIzaSyAoG5tLOTFbpV0Fp9xDpW1i0Nf-ifkxBZw';
 

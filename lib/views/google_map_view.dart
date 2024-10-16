@@ -146,12 +146,19 @@
 //   }
 // }
 
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:route_tracking_app/models/location_info/lat_lng.dart';
+import 'package:route_tracking_app/models/location_info/location.dart';
+import 'package:route_tracking_app/models/location_info/location_info.dart';
 import 'package:route_tracking_app/models/place_autocomplete_model/place_autocomplete_model.dart';
-import 'package:route_tracking_app/models/place_details_model/place_details_model.dart';
+import 'package:route_tracking_app/models/routes_model/routes_model.dart';
 import 'package:route_tracking_app/utils/google_maps_place_service.dart';
 import 'package:route_tracking_app/utils/location_service.dart';
+import 'package:route_tracking_app/utils/routes_service.dart';
 import 'package:route_tracking_app/widgets/custom_list_view.dart';
 import 'package:route_tracking_app/widgets/custom_text_field.dart';
 import 'package:uuid/uuid.dart';
@@ -168,8 +175,10 @@ class _GoogleMapViewState extends State<GoogleMapView> {
   late LocationService locationService;
   late GoogleMapController googleMapController;
   late TextEditingController textEditingController;
-  late GoogleMapsPlaceService googleMapsPlaceService;
+  late PlaceService googleMapsPlaceService;
   late Uuid uuid;
+  late RoutesService routesService;
+  Set<Polyline> polyLines = {};
 
   Set<Marker> markers = {};
 
@@ -178,9 +187,10 @@ class _GoogleMapViewState extends State<GoogleMapView> {
   @override
   void initState() {
     uuid = Uuid();
-    googleMapsPlaceService = GoogleMapsPlaceService();
+    googleMapsPlaceService = PlaceService();
     textEditingController = TextEditingController();
     locationService = LocationService();
+    routesService = RoutesService();
     initialCameraPosition = const CameraPosition(
       target: LatLng(0, 0),
     );
@@ -189,6 +199,9 @@ class _GoogleMapViewState extends State<GoogleMapView> {
 
     super.initState();
   }
+
+  late LatLng currentLocation;
+  late LatLng destinationLocation;
 
   var sessionToken; // create a random key
 
@@ -221,6 +234,7 @@ class _GoogleMapViewState extends State<GoogleMapView> {
     return Stack(
       children: [
         GoogleMap(
+          polylines: polyLines,
           markers: markers,
           onMapCreated: (controller) {
             googleMapController = controller; // googleMapController Initialized
@@ -242,11 +256,19 @@ class _GoogleMapViewState extends State<GoogleMapView> {
                 height: 20,
               ),
               CustomListView(
-                onSelectedPlace: (PlaceDetailsModel) {
+                onSelectedPlace: (PlaceDetailsModel) async {
                   textEditingController.clear();
                   places.clear();
                   sessionToken = null;
                   setState(() {});
+
+                  destinationLocation = LatLng(
+                    PlaceDetailsModel.geometry!.location!.lat!,
+                    PlaceDetailsModel.geometry!.location!.lng!,
+                  );
+
+                  var points = await getRouteData();
+                  displayRoute(points);
                 },
                 places: places,
                 googleMapsPlaceService: googleMapsPlaceService,
@@ -262,7 +284,7 @@ class _GoogleMapViewState extends State<GoogleMapView> {
     try {
       var locationData = await locationService.getLocation();
 
-      LatLng currentLocation = LatLng(
+      currentLocation = LatLng(
         locationData.latitude!,
         locationData.longitude!,
       );
@@ -291,8 +313,93 @@ class _GoogleMapViewState extends State<GoogleMapView> {
       // to do
     } catch (e) {}
   }
-}
 
+  Future<List<LatLng>> getRouteData() async {
+    // origin ==> current location
+    LocationInfoModel origin = LocationInfoModel(
+      location: LocationModel(
+        latLng: LatLngModel(
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+        ),
+      ),
+    );
+
+    // destination ==> destination location
+    LocationInfoModel destination = LocationInfoModel(
+      location: LocationModel(
+        latLng: LatLngModel(
+          latitude: destinationLocation.latitude,
+          longitude: destinationLocation.longitude,
+        ),
+      ),
+    );
+
+    RoutesModel routes = await routesService.fetchRoutes(
+        origin: origin, destination: destination);
+    PolylinePoints polylinePoints = PolylinePoints();
+
+    List<LatLng> points = getDecodedRoute(polylinePoints, routes);
+
+    return points;
+  }
+
+  List<LatLng> getDecodedRoute(
+      PolylinePoints polylinePoints, RoutesModel routes) {
+    List<PointLatLng> result = polylinePoints.decodePolyline(
+      routes.routes!.first.polyline!.encodedPolyline!,
+    );
+
+    List<LatLng> points =
+        result.map((e) => LatLng(e.latitude, e.longitude)).toList();
+    return points;
+  }
+
+  void displayRoute(List<LatLng> points) {
+    Polyline route = Polyline(
+      polylineId: PolylineId('route'),
+      points: points,
+      color: Colors.red,
+      width: 5,
+    );
+
+    polyLines.add(route);
+
+    LatLngBounds bounds = getLatLngBounds(points);
+    googleMapController.animateCamera(
+      CameraUpdate.newLatLngBounds(
+        bounds,
+        16,
+      ),
+    );
+  }
+
+  LatLngBounds getLatLngBounds(List<LatLng> points) {
+    // min southweat latitude
+    // min southweat longtuide
+    var southWestLatitude = points.first.latitude;
+    var southWestLongtude = points.first.longitude;
+
+    // max northeast latitude
+    // max northeast longtuide
+
+    var northEastLatitude = points.first.latitude;
+    var northEastLongtude = points.first.longitude;
+
+    for (var point in points) {
+      southWestLatitude = min(southWestLatitude, point.latitude);
+      southWestLongtude = min(southWestLongtude, point.longitude);
+
+      northEastLatitude = max(northEastLatitude, point.latitude);
+      northEastLongtude = max(northEastLongtude, point.longitude);
+    }
+
+    return LatLngBounds(
+      southwest: LatLng(southWestLatitude, southWestLongtude),
+      northeast: LatLng(northEastLatitude, northEastLongtude),
+    );
+  }
+}
 
 
 // create text field

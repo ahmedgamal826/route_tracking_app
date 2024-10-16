@@ -72,35 +72,50 @@ class _GoogleMapsRouteState extends State<RouteTrackingWithoutApikey> {
           double lat = locations.first.latitude;
           double lng = locations.first.longitude;
 
-          setState(() {
-            _destinationMarker = Marker(
-              markerId: MarkerId('destination'),
-              position: LatLng(lat, lng),
-              infoWindow: InfoWindow(title: destinationName),
-            );
+          setState(
+            () {
+              _destinationMarker = Marker(
+                markerId: const MarkerId('destination'),
+                position: LatLng(lat, lng),
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueGreen,
+                ), // تغيير اللون إلى الأزرق
 
-            _routePolyline = Polyline(
-              polylineId: PolylineId('route'),
-              color: Colors.blue,
-              width: 5,
-              points: _getRoutePoints(
+                infoWindow: InfoWindow(title: destinationName),
+              );
+
+              _routePolyline = Polyline(
+                polylineId: const PolylineId('route'),
+                color: Colors.blue,
+                width: 5,
+                points: _getRoutePoints(
+                  LatLng(_currentPosition!.latitude!,
+                      _currentPosition!.longitude!),
+                  LatLng(lat, lng),
+                ),
+              );
+
+              // إظهار المحافظات بين النقطتين
+              _showProvincesBetween(
                 LatLng(
                     _currentPosition!.latitude!, _currentPosition!.longitude!),
                 LatLng(lat, lng),
-              ),
-            );
+              );
 
-            // إظهار المحافظات بين النقطتين
-            _showProvincesBetween(
-              LatLng(_currentPosition!.latitude!, _currentPosition!.longitude!),
-              LatLng(lat, lng),
-            );
-
-            _mapController?.animateCamera(CameraUpdate.newLatLngZoom(
-              LatLng(lat, lng),
-              14,
-            ));
-          });
+              // ضبط LatLngBounds لإظهار المسار بالكامل بين النقطتين
+              LatLngBounds bounds = createBounds(
+                LatLng(
+                    _currentPosition!.latitude!, _currentPosition!.longitude!),
+                LatLng(lat, lng),
+              );
+              _mapController?.animateCamera(
+                CameraUpdate.newLatLngBounds(
+                  bounds,
+                  50,
+                ),
+              );
+            },
+          );
         } else {
           _showErrorDialog('Location not found. Please enter a valid name.');
         }
@@ -220,5 +235,24 @@ class _GoogleMapsRouteState extends State<RouteTrackingWithoutApikey> {
         ],
       ),
     );
+  }
+
+  // دالة لإنشاء bounds بين النقطتين (البداية والنهاية)
+  LatLngBounds createBounds(LatLng start, LatLng end) {
+    LatLngBounds bounds;
+    if (start.latitude > end.latitude && start.longitude > end.longitude) {
+      bounds = LatLngBounds(southwest: end, northeast: start);
+    } else if (start.latitude > end.latitude) {
+      bounds = LatLngBounds(
+          southwest: LatLng(end.latitude, start.longitude),
+          northeast: LatLng(start.latitude, end.longitude));
+    } else if (start.longitude > end.longitude) {
+      bounds = LatLngBounds(
+          southwest: LatLng(start.latitude, end.longitude),
+          northeast: LatLng(end.latitude, start.longitude));
+    } else {
+      bounds = LatLngBounds(southwest: start, northeast: end);
+    }
+    return bounds;
   }
 }

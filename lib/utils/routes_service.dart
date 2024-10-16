@@ -91,7 +91,7 @@ class RoutesService {
     var response = await http.post(
       url,
       headers: headers,
-      body: body,
+      body: jsonEncode(body),
     );
 
     if (response.statusCode == 200) {

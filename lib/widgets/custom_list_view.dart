@@ -58,7 +58,7 @@ class CustomListView extends StatelessWidget {
   });
 
   final List<PlaceModel> places;
-  final GoogleMapsPlaceService googleMapsPlaceService;
+  final PlaceService googleMapsPlaceService;
   final Function(PlaceDetailsModel) onSelectedPlace;
 
   @override
@@ -72,7 +72,7 @@ class CustomListView extends StatelessWidget {
             leading: const Icon(
               FontAwesomeIcons.mapPin,
             ),
-            title: Text('data'
+            title: const Text('data'
                 // places[index].description!,
                 ),
             trailing: IconButton(
