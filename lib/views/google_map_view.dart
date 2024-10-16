@@ -137,6 +137,9 @@ class _GoogleMapViewState extends State<GoogleMapView> {
   void updateCurrentLocation() async {
     try {
       mapServices.updateCurrentLocation(
+        onUpdatedCurrentLocation: () {
+          setState(() {});
+        },
         googleMapController: googleMapController,
         markers: markers,
       );
